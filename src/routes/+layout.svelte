@@ -1,21 +1,32 @@
+<script lang="ts">
+    import HeaderItem from "../components/headerItem.svelte";
+</script>
+
 <header>
-    <a href="/make">만들기</a>
+    <a href="/" id="logo"><img src="/logo.svg" alt="logo"></a>
+    <div id="right">
+        <HeaderItem href="/make" name="만들기" />
+    </div>
 </header>
 
 <style>
     header {
-        width: 100vw;
         height: 50px;
-        display: flex;
-        flex-direction: row-reverse;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        justify-content: center;
+        margin: 0px 30px;
         align-items: center;
     }
-    header > a {
-        text-decoration: none;
-        color: #000000;
-        padding: 10px 30px;
-        font-size: 18px;
-        font-weight: bold;
+    #logo {
+        justify-self: left;
+        height: 45px;
+    }
+        #logo > img {
+            height: 100%;
+        }
+    #right {
+        grid-column: 3;
     }
 </style>
 
