@@ -87,7 +87,7 @@
         </div>
         <div class="divider" class:expanding on:mousedown={startExpand}></div>
         <div class="variables" class:expanding>
-             
+            <h1>변수(MD) 리스트</h1>
         </div>
     </div>
 </main>
@@ -112,23 +112,16 @@
         height: auto;
         max-height: 100%;
         position: relative;
-    }
-    .code {
         background: #eeeeee;
     }
-        .code > * {
-            width: 100%;
-            height: 100%;
-            outline: none;
-            border: none;
-            background: none;
-            resize: none;
-            position: absolute;
-        }
-
-    .variables {
-        background-color: #00ff00;
-        flex: 1;
+    .code > * {
+        width: 100%;
+        height: 100%;
+        outline: none;
+        border: none;
+        background: none;
+        resize: none;
+        position: absolute;
     }
     .divider {
         width: 50%;
@@ -137,6 +130,14 @@
         height: 100%;
         cursor: ew-resize;
     }
+
+    .variables {
+        flex: 1;
+    }
+    .variables h1 {
+        text-align: center;
+    }
+
     .expanding {
         user-select: none;
         pointer-events: none;
