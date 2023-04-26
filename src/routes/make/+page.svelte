@@ -1,8 +1,8 @@
 <script lang="ts">
     let editor: HTMLDivElement
     let codeEditor: HTMLDivElement
-    let codeWidth = 1000
-    let codePercent: number;
+    let codeWidth = 0
+    let codePercent = 50;
 
     let expanding = false
     const mouse = {
@@ -35,7 +35,7 @@
 <svelte:window on:mouseup={expanding ? stopExpand : () => {}} on:mousemove={expanding ? expand : () => {}} />
 <main>
     <div id="editor" bind:this={editor}>
-        <div class="code" style={`width: ${codePercent ? `${codePercent}%` : `${codeWidth}px`};`} class:expanding bind:this={codeEditor}><input /></div>
+        <div class="code" style={`width: ${codePercent}%;`} class:expanding bind:this={codeEditor}><input /></div>
         <div class="divider" class:expanding on:mousedown={startExpand}></div>
         <div class="variables" class:expanding>
              
