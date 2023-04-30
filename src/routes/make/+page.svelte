@@ -3,6 +3,13 @@
     let codeEditor: HTMLDivElement
     let codeInput: HTMLTextAreaElement
     let codeCode: HTMLElement
+    export let data: { typeList: string[] }
+    const editorData = {
+        type: "none",
+        code: "{}"
+    }
+    
+    //#region 슬라이더
     let codeWidth = 0
     let codePercent = 50;
 
@@ -33,6 +40,8 @@
         codePercent = ((codeWidth + dx) * 100) / editor.clientWidth;
 		return
 	}
+    //#endregion
+
     const json = {
         replacer: (match: any, pIndent: string, pKey: string, pVal: string | string[], pEnd: any) => {
             const key = '<span style="color: #0088ff;">';
@@ -52,7 +61,7 @@
                 .replace(/</g, '&lt;').replace(/>/g, '&gt;')
                 .replace(jsonLine, json.replacer)
                 .replaceAll("\n", "<br />")
-                .replaceAll("  ", "&nbsp;");
+                .replaceAll("  ", "&nbsp;&nbsp;");
         }
     }
     function showCodeInput() {
@@ -66,13 +75,32 @@
         codeEditor.style.overflow = "auto"
     }
     function setCodeCode(e: { currentTarget: HTMLTextAreaElement & EventTarget }) {
+        setCode(e.currentTarget.value)
+    }
+    function setCode(code: string) {
         try {
-            codeCode.innerHTML = json.prettyPrint(JSON.parse(e.currentTarget.value))
+            const jsoncode = JSON.parse(code)
+            codeCode.innerHTML = json.prettyPrint(jsoncode)
+            codeInput.value = JSON.stringify(jsoncode, null, 4)
+            editorData.code = code
         }
         catch (err) {
+            codeInput.value = code
             codeCode.innerHTML = `<span style="color: #ff0000; font-size: 100px; font-weight: bolder;">파싱 오류!</span>
             <br />
             <span style="color: #ff0000; font-size: 25px; font-weight: bolder;">${err}</span>`
+        }
+    }
+    async function setType(e: { currentTarget: HTMLSelectElement & EventTarget }) {
+        const res = await fetch(`/api/defData/${e.currentTarget.value}`)
+        const data = await res.json()
+        if (data.code === 200) {
+            setCode(JSON.stringify(data.data))
+            editorData.type = data.data.type
+        }
+        else {
+            alert("알 수 없는 템플릿입니다.")
+            e.currentTarget.value = editorData.type
         }
     }
 </script>
@@ -80,10 +108,21 @@
 <main lang="ts">
     <div id="editor" bind:this={editor}>
         <div class="code" style={`width: ${codePercent}%;`} class:expanding bind:this={codeEditor}>
-            <code bind:this={codeCode} on:mousedown={(e) => {
-                if (e.button === 0) showCodeInput()
-            }}></code>
-            <textarea bind:this={codeInput} on:focusout={showCodeCode} on:input={setCodeCode}>zzz</textarea>
+            <div id="typeSelectorBlock">
+                <label for="typeSelector">타입 (변경시 쓰던 내용 삭제) : </label>
+                <select id="typeSelector" on:change={setType}>
+                    <option selected disabled>템플릿 타입을 선택해주세요</option>
+                    {#each data.typeList as value}
+                        <option value={value}>{value}</option>
+                    {/each}
+                </select>
+            </div>
+            <div id="codeManager">
+                <code style="display: none;" bind:this={codeCode} on:mousedown={(e) => {
+                    if (e.button === 0) showCodeInput()
+                }}></code>
+                <textarea bind:this={codeInput} on:focusout={showCodeCode} on:input={setCodeCode}></textarea>
+            </div>
         </div>
         <div class="divider" class:expanding on:mousedown={startExpand}></div>
         <div class="variables" class:expanding>
@@ -113,15 +152,35 @@
         max-height: 100%;
         position: relative;
         background: #eeeeee;
+        font-size: 13px;
     }
-    .code > * {
+    .code {
+        display: inline-grid;
+        grid-template-rows: 60px 1fr;
+    }
+    #typeSelectorBlock {
+        padding: 10px;
+    }
+        #typeSelector {
+            padding: 5px 12.5px;
+            border: 1px solid #000000;
+            border-radius: 999px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+    #codeManager {
         width: 100%;
         height: 100%;
+    }
+    .code > #codeManager > * {
+        width: 100%;
+        height: calc(100% - 60px);
         outline: none;
         border: none;
         background: none;
         resize: none;
         position: absolute;
+        white-space: pre-wrap;
     }
     .divider {
         width: 50%;
