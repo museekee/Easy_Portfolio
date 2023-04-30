@@ -1,13 +1,23 @@
 <script lang="ts">
+    import MdListItem from "../../components/mdListItem.svelte"
+    //@ts-ignore
+    import { sx } from "svelox"
+
     let editor: HTMLDivElement
     let codeEditor: HTMLDivElement
     let codeInput: HTMLTextAreaElement
     let codeCode: HTMLElement
     export let data: { typeList: string[] }
-    const editorData = {
+    const editorData: {type: string, code: string} = {
         type: "none",
         code: "{}"
     }
+    $: mdList = sx([
+        {
+            key: "defText",
+            value: "내용"
+        }
+    ], (item: {key: string, value: string}) => mdList = item)
     
     //#region 슬라이더
     let codeWidth = 0
@@ -103,11 +113,15 @@
             e.currentTarget.value = editorData.type
         }
     }
+    function addMdListItem() {
+        mdList.push({key: "key", value: "value"})
+        // console.log(mdList.copyWithin()[0])
+    }
 </script>
 <svelte:window on:mouseup={expanding ? stopExpand : () => {}} on:mousemove={expanding ? expand : () => {}} />
 <main lang="ts">
     <div id="editor" bind:this={editor}>
-        <div class="code" style={`width: ${codePercent}%;`} class:expanding bind:this={codeEditor}>
+        <div id="code" style={`width: ${codePercent}%;`} class:expanding bind:this={codeEditor}>
             <div id="typeSelectorBlock">
                 <label for="typeSelector">타입 (변경시 쓰던 내용 삭제) : </label>
                 <select id="typeSelector" on:change={setType}>
@@ -124,11 +138,22 @@
                 <textarea bind:this={codeInput} on:focusout={showCodeCode} on:input={setCodeCode}></textarea>
             </div>
         </div>
-        <div class="divider" class:expanding on:mousedown={startExpand}></div>
-        <div class="variables" class:expanding>
+        <div id="divider" class:expanding on:mousedown={startExpand}></div>
+        <div id="variables" class:expanding>
             <h1>변수(MD) 리스트</h1>
+            <div class="list">
+                {#each mdList as item, i}
+                    <MdListItem
+                        key={item.key}
+                        value={item.value}
+                        onKeyChange={(e) => {mdList[i].key = e.currentTarget.value}}
+                        onValueChange={(e) => {mdList[i].value = e.currentTarget.value}} />
+                {/each}
+                <button class="add" on:click={addMdListItem}>+</button>
+            </div>
         </div>
     </div>
+    <button id="save">저장</button>
 </main>
 
 <style>
@@ -144,7 +169,7 @@
         grid-column: 2;
         grid-row: 1;
     }
-    .code, .variables {
+    #code, #variables {
         min-width: 150px;
         display: inline-block;
         overflow: auto;
@@ -154,7 +179,7 @@
         background: #eeeeee;
         font-size: 13px;
     }
-    .code {
+    #code {
         display: inline-grid;
         grid-template-rows: 60px 1fr;
     }
@@ -172,7 +197,7 @@
         width: 100%;
         height: 100%;
     }
-    .code > #codeManager > * {
+    #code > #codeManager > * {
         width: 100%;
         height: calc(100% - 60px);
         outline: none;
@@ -182,7 +207,7 @@
         position: absolute;
         white-space: pre-wrap;
     }
-    .divider {
+    #divider {
         width: 50%;
         width: 2px;
         background: #aaaaaa;
@@ -190,11 +215,40 @@
         cursor: ew-resize;
     }
 
-    .variables {
+    #variables {
         flex: 1;
     }
-    .variables h1 {
+    #variables h1 {
         text-align: center;
+    }
+        #variables .list {
+            width: 100%;
+            position: absolute;
+            overflow: auto;
+        }
+        #variables .list .add {
+            border: none;
+            background: #0088ff;
+            font-size: 50px;
+            width: 100%;
+            border-radius: 999px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+    #save {
+        grid-column: 2;
+        grid-row: 2;
+        aspect-ratio: 1 / 1;
+        height: 95%;
+        margin: auto;
+        border-radius: 50%;
+        border-color: #0000ff;
+        background-color: #00aaff;
+        margin-right: 10px;
+        font-size: 20px;
+        font-weight: bold;
+        cursor: pointer;
     }
 
     .expanding {
