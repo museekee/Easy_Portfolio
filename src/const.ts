@@ -61,6 +61,5 @@ export const FacebookTypecheck = [
     "profilePicture:string",
     "profileBack:string",
     "aboutMe:string",
-    "profile.title:string",
-    "profile.text:string"
+    "profile:object"
 ].concat(DefDataTypecheck)

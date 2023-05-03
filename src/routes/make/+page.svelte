@@ -1,23 +1,30 @@
 <script lang="ts">
+    //#region import
     import MdListItem from "../../components/mdListItem.svelte"
-    //@ts-ignore
-    import { sx } from "svelox"
+    import * as svelox from "svelox"
+    //#endregion
 
+    //#region FrontendBindings
     let editor: HTMLDivElement
     let codeEditor: HTMLDivElement
     let codeInput: HTMLTextAreaElement
     let codeCode: HTMLElement
     export let data: { typeList: string[] }
+    //#endregion
     const editorData: {type: string, code: string} = {
         type: "none",
-        code: "{}"
+        code: ""
     }
-    $: mdList = sx([
+
+    //#region MdList
+    let mdList: svelox.ArrayAddition<{key: string, value: string}[]>;
+    $: mdList = svelox.sx([
         {
             key: "defText",
             value: "내용"
         }
-    ], (item: {key: string, value: string}) => mdList = item)
+    ], (item) => mdList = item)
+    //#endregion
     
     //#region 슬라이더
     let codeWidth = 0
@@ -74,6 +81,8 @@
                 .replaceAll("  ", "&nbsp;&nbsp;");
         }
     }
+
+    //#region FrontendCode
     function showCodeInput() {
         codeInput.style.display = "block"
         codeCode.style.display = "none"
@@ -89,10 +98,10 @@
     }
     function setCode(code: string) {
         try {
+            editorData.code = code
             const jsoncode = JSON.parse(code)
             codeCode.innerHTML = json.prettyPrint(jsoncode)
             codeInput.value = JSON.stringify(jsoncode, null, 4)
-            editorData.code = code
         }
         catch (err) {
             codeInput.value = code
@@ -101,8 +110,9 @@
             <span style="color: #ff0000; font-size: 25px; font-weight: bolder;">${err}</span>`
         }
     }
+    //#endregion
     async function setType(e: { currentTarget: HTMLSelectElement & EventTarget }) {
-        const res = await fetch(`/api/defData/${e.currentTarget.value}`)
+        const res = await fetch(`/api/portfolio/defData/${e.currentTarget.value}`)
         const data = await res.json()
         if (data.code === 200) {
             setCode(JSON.stringify(data.data))
@@ -116,6 +126,20 @@
     function addMdListItem() {
         mdList.push({key: "key", value: "value"})
         // console.log(mdList.copyWithin()[0])
+        console.log(editorData, mdList)
+    }
+
+    async function save() {
+        console.log(editorData.code === "" ? "{}": editorData.code)
+        const res = await fetch(`/api/portfolio/upload`, {
+            method: "POST",
+            body: JSON.stringify({
+                mdList,
+                code: editorData.code === "" ? "{}": editorData.code,
+                type: editorData.type
+            })
+        })
+        console.log(await res.json())
     }
 </script>
 <svelte:window on:mouseup={expanding ? stopExpand : () => {}} on:mousemove={expanding ? expand : () => {}} />
@@ -146,6 +170,8 @@
                     <MdListItem
                         key={item.key}
                         value={item.value}
+                        index={i}
+                        onDelete={(idx) => mdList.splice(idx, 1)}
                         onKeyChange={(e) => {mdList[i].key = e.currentTarget.value}}
                         onValueChange={(e) => {mdList[i].value = e.currentTarget.value}} />
                 {/each}
@@ -153,7 +179,7 @@
             </div>
         </div>
     </div>
-    <button id="save">저장</button>
+    <button id="save" on:click={save}>저장</button>
 </main>
 
 <style>

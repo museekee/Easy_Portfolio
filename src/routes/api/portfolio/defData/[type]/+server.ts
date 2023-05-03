@@ -1,5 +1,5 @@
-import type { RequestEvent, RequestHandler } from '../$types'
-import * as Const from "./../../../../const"
+import type { RequestEvent } from "@sveltejs/kit"
+import * as Const from "../../../../../const"
 
 export async function GET({ params }: RequestEvent) {
     if (!Object.keys(Const).includes(`Def${params.type}`)) return new Response(JSON.stringify({ code: 404 }))

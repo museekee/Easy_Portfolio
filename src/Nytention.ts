@@ -25,25 +25,39 @@ export const encrypt = (text: string | number) => {
 export const autoTypeChecker = (type: string[], data: object) => {
     const allowedNull: {[x: string]: boolean} = {}
     const notEqual: string[] = []
+    const notEqualRightType: string[] = []
     for (const item of type) {
         const key = item.split(":")[0]
         const type = item.split(":")[1]
         const allowedNullKey = item.split(":")[2]
         const keyArr = key.split(".")
-        const value = keyArr.reduce((acc: { [x: string]: any }, cur: string | number) => acc && acc[cur], data) || undefined;
+        const value = keyArr.reduce((acc: { [x: string]: any }, cur: string | number) => acc && acc[cur], data) ?? undefined;
         if (allowedNullKey) { // 하나만 null이 아니어도 될 때
-            if (!allowedNull.hasOwnProperty(allowedNullKey) || !allowedNull[allowedNullKey]) {
-                if (value === undefined) allowedNull[allowedNullKey] = false;
-                else allowedNull[allowedNullKey] = true;
+            if (!allowedNull.hasOwnProperty(allowedNullKey) || !allowedNull[allowedNullKey]) { // 처음 보는 애거나 false였던 애
+                if (value === undefined || value === null) {} // 없으면 그대로
+                else allowedNull[allowedNullKey] = true; // 있으면 true
             }
-            else if (typeof(value) !== type) notEqual.push(key)
         }
         else {
-            if (typeof(value) !== type) notEqual.push(key)
+            if (typeof(value) !== type) {
+                notEqual.push(key)
+                notEqualRightType.push(type)
+            }
         }
+    }
+    // allowedNull 재정비
+    for (const item of type) {
+        const allowedNullKey = item.split(":")[2]
+        if (allowedNullKey)
+        if (!allowedNull.hasOwnProperty(allowedNullKey)) allowedNull[allowedNullKey] = false
     }
     return {
         allowedNull,
-        notEqual
+        notEqual,
+        notEqualRightType
     }
+}
+
+export const isEmptyObject = (obj: object) => {
+    return Object.keys(obj).length === 0
 }
