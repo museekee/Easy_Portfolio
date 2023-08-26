@@ -1,6 +1,6 @@
 <script lang="ts">
     export let data: string
-    export let style: string
+    export let style: string = ""
     let textBox: HTMLTextAreaElement
     let jsonViewer: HTMLElement
 

@@ -37,36 +37,27 @@
     //#endregion
     
     //#region 슬라이더
-    let codeWidth = 0
-    let codePercent = 50;
+    let leftWidth = 50;
+    let rightWidth = 50;
+    let isDragging = false;
 
-    let expanding = false
-    const mouse = {
-        x: 0
+    function handleMouseDown() {
+      isDragging = true;
     }
 
-	function startExpand(e: {
-        clientX: number;
-        pageX: number; 
-}) {   
-		expanding = true
-        mouse.x = e.clientX
-        codeWidth = editor.body.clientWidth
-	}
-	
-	function stopExpand() {
-		expanding = false
-	}
-	
-	function expand(e: {
-        clientX: number;
-        pageX: number; 
-}) {    
-		if (!expanding) return
-        const dx = e.clientX - mouse.x;
-        codePercent = ((codeWidth + dx) * 100) / editor.body.clientWidth;
-		return
-	}
+    function handleMouseUp() {
+      isDragging = false;
+    }
+
+    function handleMouseMove(event: MouseEvent) {
+      if (isDragging) {
+        const totalWidth = (event.currentTarget as HTMLElement).offsetWidth;
+        const mouseX = event.clientX - (event.currentTarget as HTMLElement).getBoundingClientRect().left;
+
+        leftWidth = (mouseX / totalWidth) * 100;
+        rightWidth = 100 - leftWidth;
+      }
+}
     //#endregion
 
     //#region FrontendCode
@@ -102,10 +93,9 @@
         console.log(await res.json())
     }
 </script>
-<svelte:window on:mouseup={expanding ? stopExpand : () => {}} on:mousemove={expanding ? expand : () => {}} />
 <main lang="ts">
-    <div id="editor" bind:this={editor.body}>
-        <div id="code" style={`width: ${codePercent}%;`} class:expanding bind:this={editor.codeEditor.body}>
+    <div id="editor" bind:this={editor.body} on:mousemove={handleMouseMove}>
+        <div id="code" class:isDragging style={`width: ${leftWidth}%;`} bind:this={editor.codeEditor.body}>
             <div id="typeSelectorBlock">
                 <label for="typeSelector">타입 (변경시 쓰던 내용 삭제) : </label>
                 <select id="typeSelector" on:change={setType}>
@@ -115,10 +105,10 @@
                     {/each}
                 </select>
             </div>
-            <JsonEditor bind:setJson={setJson} style={`height: 100%;`} data={editorData.code} />
+            <JsonEditor bind:setJson={setJson} data={editorData.code} />
         </div>
-        <div id="divider" class:expanding on:mousedown={startExpand}></div>
-        <div id="variables" class:expanding>
+        <div class="split-line" on:mousedown={handleMouseDown} on:mouseup={handleMouseUp} />
+        <div id="variables" style={`width: ${rightWidth}%`}>
             <h1>내용 변수 리스트</h1>
             <div class="list">
                 {#each mdList as item, i}
@@ -174,13 +164,12 @@
             font-size: 18px;
             font-weight: bold;
         }
-    #divider {
-        width: 50%;
-        width: 2px;
-        background: #aaaaaa;
-        height: 100%;
-        cursor: ew-resize;
-    }
+        .split-line {
+            width: 4px;
+            height: 100%;
+            background-color: #000;
+            cursor: col-resize;
+        }
 
     #variables {
         flex: 1;
@@ -218,7 +207,7 @@
         cursor: pointer;
     }
 
-    .expanding {
+    .isDragging {
         user-select: none;
         pointer-events: none;
     }
