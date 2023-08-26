@@ -1,21 +1,31 @@
 <script lang="ts">
     //#region import
-    import MdListItem from "../../components/mdListItem.svelte"
+    import JsonEditor from "../../../components/JsonEditor.svelte";
+    import MdListItem from "../../../components/mdListItem.svelte"
     import * as svelox from "svelox"
     //#endregion
 
     //#region FrontendBindings
-    let editor: HTMLDivElement
-    let codeEditor: HTMLDivElement
-    let codeInput: HTMLTextAreaElement
-    let codeCode: HTMLElement
+    const editor: {
+        body: HTMLDivElement,
+        codeEditor: {
+            body: HTMLDivElement
+        }
+    } = {
+        //@ts-ignore
+        body: undefined,
+        codeEditor: {
+            //@ts-ignore
+            body: undefined
+        }
+    }
     export let data: { typeList: string[] }
     //#endregion
     const editorData: {type: string, code: string} = {
         type: "none",
         code: ""
     }
-
+    let setJson: (e: string | { currentTarget: HTMLTextAreaElement & EventTarget; }) => void;
     //#region MdList
     let mdList: svelox.ArrayAddition<{key: string, value: string}[]>;
     $: mdList = svelox.sx([
@@ -41,7 +51,7 @@
 }) {   
 		expanding = true
         mouse.x = e.clientX
-        codeWidth = codeEditor.clientWidth
+        codeWidth = editor.body.clientWidth
 	}
 	
 	function stopExpand() {
@@ -54,68 +64,18 @@
 }) {    
 		if (!expanding) return
         const dx = e.clientX - mouse.x;
-        codePercent = ((codeWidth + dx) * 100) / editor.clientWidth;
+        codePercent = ((codeWidth + dx) * 100) / editor.body.clientWidth;
 		return
 	}
     //#endregion
 
-    const json = {
-        replacer: (match: any, pIndent: string, pKey: string, pVal: string | string[], pEnd: any) => {
-            const key = '<span style="color: #0088ff;">';
-            const val = '<span style="color: navy;">';
-            const str = '<span style="color: brown;">';
-            let r = pIndent || '';
-            if (pKey)
-                r = r + key + pKey.replace(/[": ]/g, '') + '</span>: ';
-            if (pVal)
-                r = r + (pVal[0] == '"' ? str : val) + pVal + '</span>';
-            return r + (pEnd || '');
-        },
-        prettyPrint: (obj: object) => {
-            const jsonLine = /^( *)("[\w]+": )?("[^"]*"|[\w.+-]*)?([,[{])?$/mg;
-            return JSON.stringify(obj, null, 4)
-                .replace(/&/g, '&amp;').replace(/\\"/g, '&quot;')
-                .replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                .replace(jsonLine, json.replacer)
-                .replaceAll("\n", "<br />")
-                .replaceAll("  ", "&nbsp;&nbsp;");
-        }
-    }
-
     //#region FrontendCode
-    function showCodeInput() {
-        codeInput.style.display = "block"
-        codeCode.style.display = "none"
-        codeEditor.style.overflow = "hidden"
-    }
-    function showCodeCode() {
-        codeCode.style.display = "block"
-        codeInput.style.display = "none"
-        codeEditor.style.overflow = "auto"
-    }
-    function setCodeCode(e: { currentTarget: HTMLTextAreaElement & EventTarget }) {
-        setCode(e.currentTarget.value)
-    }
-    function setCode(code: string) {
-        try {
-            editorData.code = code
-            const jsoncode = JSON.parse(code)
-            codeCode.innerHTML = json.prettyPrint(jsoncode)
-            codeInput.value = JSON.stringify(jsoncode, null, 4)
-        }
-        catch (err) {
-            codeInput.value = code
-            codeCode.innerHTML = `<span style="color: #ff0000; font-size: 100px; font-weight: bolder;">파싱 오류!</span>
-            <br />
-            <span style="color: #ff0000; font-size: 25px; font-weight: bolder;">${err}</span>`
-        }
-    }
     //#endregion
     async function setType(e: { currentTarget: HTMLSelectElement & EventTarget }) {
         const res = await fetch(`/api/portfolio/defData/${e.currentTarget.value}`)
         const data = await res.json()
         if (data.code === 200) {
-            setCode(JSON.stringify(data.data))
+            setJson(JSON.stringify(data.data))
             editorData.type = data.data.type
         }
         else {
@@ -144,8 +104,8 @@
 </script>
 <svelte:window on:mouseup={expanding ? stopExpand : () => {}} on:mousemove={expanding ? expand : () => {}} />
 <main lang="ts">
-    <div id="editor" bind:this={editor}>
-        <div id="code" style={`width: ${codePercent}%;`} class:expanding bind:this={codeEditor}>
+    <div id="editor" bind:this={editor.body}>
+        <div id="code" style={`width: ${codePercent}%;`} class:expanding bind:this={editor.codeEditor.body}>
             <div id="typeSelectorBlock">
                 <label for="typeSelector">타입 (변경시 쓰던 내용 삭제) : </label>
                 <select id="typeSelector" on:change={setType}>
@@ -155,16 +115,11 @@
                     {/each}
                 </select>
             </div>
-            <div id="codeManager">
-                <code style="display: none;" bind:this={codeCode} on:mousedown={(e) => {
-                    if (e.button === 0) showCodeInput()
-                }}></code>
-                <textarea bind:this={codeInput} on:focusout={showCodeCode} on:input={setCodeCode}></textarea>
-            </div>
+            <JsonEditor bind:setJson={setJson} style={`height: 100%;`} data={editorData.code} />
         </div>
         <div id="divider" class:expanding on:mousedown={startExpand}></div>
         <div id="variables" class:expanding>
-            <h1>변수(MD) 리스트</h1>
+            <h1>내용 변수 리스트</h1>
             <div class="list">
                 {#each mdList as item, i}
                     <MdListItem
@@ -219,20 +174,6 @@
             font-size: 18px;
             font-weight: bold;
         }
-    #codeManager {
-        width: 100%;
-        height: 100%;
-    }
-    #code > #codeManager > * {
-        width: 100%;
-        height: calc(100% - 60px);
-        outline: none;
-        border: none;
-        background: none;
-        resize: none;
-        position: absolute;
-        white-space: pre-wrap;
-    }
     #divider {
         width: 50%;
         width: 2px;

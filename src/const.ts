@@ -1,11 +1,6 @@
 export const TypeList = ["Facebook", "Windows"]
 
 export interface DefType {
-    type: string
-    id: string
-    createdAt: Date
-    lastUpdated: Date
-    maker: string
     backgroundColor?: string
     backgroundImage?: string
     textColor: string
@@ -15,8 +10,6 @@ export interface DefType {
     }[]
 }
 export const DefData = {
-    type: "",
-    maker: "",
     backgroundColor: "#222222",
     textColor: "#eeeeee",
     contents: [
@@ -27,7 +20,6 @@ export const DefData = {
     ]
 }
 export const DefDataTypecheck = [
-    "type:string",
     "backgroundColor:string:DEF_BG",
     "backgroundImage:string:DEF_BG",
     "textColor:string",

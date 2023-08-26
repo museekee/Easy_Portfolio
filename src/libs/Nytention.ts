@@ -12,8 +12,9 @@ export const encrypt = (text: string | number) => {
     const firstSplit = shasum.digest('hex').split("")
     firstSplit[random(0, firstSplit.length - 1)] += random(0, 99999999)
     const first = firstSplit.join("")
-    shasum.update(first)
-    return shasum.digest("hex")
+    const shasum2 = crypto.createHash("sha1")
+    shasum2.update(first)
+    return shasum2.digest("hex")
 }
 
 /**

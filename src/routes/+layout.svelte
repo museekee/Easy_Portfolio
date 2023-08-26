@@ -5,7 +5,7 @@
 <header>
     <a href="/" id="logo"><img src="/logo.svg" alt="logo"></a>
     <div id="right">
-        <HeaderItem href="/make" name="만들기" />
+        <HeaderItem href="/portfolio/list" name="작품목록" />
     </div>
 </header>
 
